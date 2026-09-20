@@ -1,77 +1,39 @@
-# Phishing Detection using Machine Learning
+# PhishSieve
 
-[**▶ Live Demo — the trained model, running in your browser**](https://harshith0308.github.io/phishing-detection-ml/)
+PhishSieve is a web app that checks whether a URL looks safe or suspicious using a machine learning model.
 
-![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-4_models_compared-F7931E?logo=scikitlearn&logoColor=white)
-![Random Forest](https://img.shields.io/badge/Random_Forest-96.6%25_accuracy-2ea043)
-![SHAP](https://img.shields.io/badge/explainability-SHAP_%2B_importances-8A2BE2)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+It uses URL-based features to detect phishing patterns, makes a prediction with a trained Random Forest model, and shows a simple result with clear guidance for the user.
 
-A machine learning web application that detects phishing websites from URL-based
-features. It trains and compares four classifiers (Logistic Regression, KNN, SVM,
-and Random Forest) on a labelled phishing dataset, serves predictions through a
-lightweight Python HTTP server, and ships with a clean, responsive web interface
-that includes model metrics and explainability (feature importances / SHAP).
+## Overview
 
-Paste a URL, hit **Predict**, and the app extracts URL-based signals, runs them
-through the trained Random Forest, and returns a **Safe / Phishing** verdict
-alongside the exact features used, a side-by-side model comparison, and an
-explanation of *why* the model decided what it did.
+This project analyzes a submitted URL, extracts useful signals such as URL length, `@` usage, suspicious host patterns, and other phishing indicators, then classifies it as:
 
+- Safe
+- Phishing
 
-> **Live demo:** the exact Random Forest trained by `app.py` is exported tree-by-tree
-> and evaluated client-side on [GitHub Pages](https://harshith0308.github.io/phishing-detection-ml/) —
-> same features, same predictions, no server. (SHAP explanations need the local Python app.)
-
-## Preview
-
-The dashboard combines live prediction, a model-performance sidebar, explainable-AI
-panels, and a full metric breakdown on a single page.
-
-![Phishing Detection dashboard](images/dashboard.png)
-
-### Live URL analysis
-
-Enter any URL to get an instant verdict, the features extracted from it, and the
-raw row fed to the model.
-
-![URL prediction and extracted features](images/prediction.png)
-
-### Dark mode
-
-The interface ships with a built-in light/dark theme toggle.
-
-![Dashboard in dark mode](images/dashboard-dark.png)
+The interface is lightweight, simple, and designed for quick checks without exposing unnecessary technical detail.
 
 ## Features
 
-- **Four ML models compared** — Logistic Regression, KNN, SVM, and Random Forest,
-  with hyperparameter tuning via `GridSearchCV` for KNN and SVM.
-- **Best model served** — Random Forest (~96.6% accuracy) is used for live predictions.
-- **URL feature extraction** — derives indicators such as URL length, `@` symbol
-  presence, IP-address hostnames, prefix/suffix hyphenation, and host-based traffic
-  heuristics directly from a submitted URL.
-- **Explainability** — global Random Forest feature importances and per-prediction
-  contributions, with optional [SHAP](https://github.com/shap/shap) values when the
-  package is installed.
-- **Modern UI** — single-page interface (`index.html`) with light/dark themes,
-  metrics dashboard, and prediction explanations.
-- **Zero heavy frameworks** — the backend uses only Python's standard-library
-  `http.server`, plus scikit-learn / pandas / numpy.
+- URL-based phishing detection
+- Random Forest model for live predictions
+- Simple browser UI
+- Light and dark theme support
+- Clear user-facing result and guidance
+- Local Python backend with no heavy framework setup
 
 ## Project structure
 
 ```
 .
-├── app.py                 # HTTP server, model training/caching, prediction & explain endpoints
-├── index.html             # Single-page web frontend
-├── phishing.csv           # Labelled dataset (30 features + Result)
-├── rf_model.pkl           # Cached trained Random Forest model
-├── rf_meta.json           # Cached feature names and model accuracies
-├── requirements.txt       # Python dependencies
-├── images/                # Screenshots used in this README
-└── Report and PPT/        # Project report (PDF/DOCX) and presentation
+├── app.py
+├── index.html
+├── phishing.csv
+├── requirements.txt
+├── README.md
+├── docs/
+├── images/
+└── Report and PPT/
 ```
 
 ## Getting started
@@ -80,16 +42,11 @@ The interface ships with a built-in light/dark theme toggle.
 
 - Python 3.9+
 
-### Installation
+### Install
 
 ```bash
-# (optional) create a virtual environment
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# macOS / Linux
-source venv/bin/activate
-
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -99,45 +56,19 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open <http://localhost:8000/> in your browser.
+Then open:
 
-On first run the app loads the cached model from `rf_model.pkl`. If the cache is
-missing it trains all four models from `phishing.csv` and writes a fresh cache.
+```text
+http://localhost:8000/
+```
 
 ## How it works
 
-1. **Data** — `phishing.csv` contains 30 engineered features per URL and a binary
-   `Result` label (`1` = safe, `-1` = phishing).
-2. **Training** — `train_all_models` performs a stratified 80/20 holdout split,
-   scales features where appropriate, tunes KNN/SVM with cross-validated grid
-   search, and records accuracy plus a full classification report, confusion
-   matrix, and ROC-AUC for each model.
-3. **Serving** — the Random Forest model answers `POST /predict`. Features for an
-   incoming URL are extracted on the fly and mapped onto the model's expected
-   feature columns.
-4. **Explaining** — `GET /explain` returns global importances; `POST /explain`
-   returns per-URL contributions (SHAP when available, importance-weighted
-   fallback otherwise).
+1. Enter a URL into the app.
+2. The backend extracts phishing-related features from the URL.
+3. The trained model predicts whether the URL is safe or suspicious.
+4. The UI shows the result and next-step advice.
 
-### API endpoints
+## Notes
 
-| Method | Path        | Description                                  |
-|--------|-------------|----------------------------------------------|
-| GET    | `/`         | Serves the web interface                     |
-| GET    | `/metrics`  | Model accuracies, params, and metrics (JSON) |
-| GET    | `/explain`  | Global feature importances (JSON)            |
-| POST   | `/predict`  | Predict safe/phishing for a URL (JSON)       |
-| POST   | `/explain`  | Per-URL prediction explanation (JSON)        |
-
-## Model results
-
-| Model               | Accuracy |
-|---------------------|----------|
-| Random Forest       | 96.6%    |
-| KNN                 | 95.9%    |
-| Logistic Regression | 92.8%    |
-| SVM                 | 92.8%    |
-
-## License
-
-This project is released under the [MIT License](LICENSE).
+This project is intended for local use and demo purposes. It is a personal project and is not tied to any original external owner or repository attribution.

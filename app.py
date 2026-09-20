@@ -103,6 +103,21 @@ def train_all_models(df: pd.DataFrame, target_col: str, test_size: float = 0.2, 
 def normalize_name(name: str) -> str:
     return re.sub(r"[^a-z0-9]", "", name.lower())
 
+def resolve_model_for_request(requested_model=None):
+    if requested_model is not None:
+        raw_name = str(requested_model).strip()
+        if raw_name:
+            if raw_name in models:
+                return raw_name
+            lookup = {name.lower(): name for name in models.keys()}
+            if raw_name.lower() in lookup:
+                return lookup[raw_name.lower()]
+    if "Random Forest" in models:
+        return "Random Forest"
+    if models:
+        return next(iter(models.keys()))
+    return None
+
 def resolve_feature_columns(df: pd.DataFrame):
     target_names = {
         "URL_Length": ["url_length", "urllength", "url_length1", "length_url", "length", "urllen"],
@@ -123,6 +138,25 @@ def resolve_feature_columns(df: pd.DataFrame):
         col_map[std_name] = found
     found_cols = [col for col in col_map.values() if col is not None]
     return col_map, found_cols
+
+def detect_url_phishing(url: str) -> str:
+    if not isinstance(url, str):
+        return "Safe"
+    cleaned = url.strip()
+    if not cleaned:
+        return "Safe"
+    parsed = urlparse(cleaned)
+    if "@" in cleaned and (parsed.username is not None and parsed.username != ""):
+        return "Phishing"
+    if parsed.netloc and "@" in parsed.netloc:
+        return "Phishing"
+    return "Safe"
+
+
+def predict_label_from_model_output(value):
+    pred = int(value)
+    return "Safe" if pred > 0 else "Phishing"
+
 
 def extract_features(url: str) -> pd.DataFrame:
     parsed = urlparse(url if isinstance(url, str) else "")
@@ -154,6 +188,92 @@ def build_full_feature_row(extracted: pd.DataFrame, model_features: list, col_ma
         row.loc[:, actual] = extracted.loc[0, std_name]
     return row
 
+def refresh_explanation_state():
+    global rf_model, lr_model, rf_importances, lr_coeffs, SHAP_EXPLAINER
+    rf_model = models.get("Random Forest")
+    lr_model = models.get("Logistic Regression")
+    rf_importances = []
+    if rf_model is not None and hasattr(rf_model, "feature_importances_"):
+        try:
+            imp = rf_model.feature_importances_
+            rf_importances = sorted([
+                {"feature": feature_names[i], "importance": float(imp[i])}
+                for i in range(len(feature_names))
+            ], key=lambda x: x["importance"], reverse=True)
+        except Exception:
+            rf_importances = []
+    lr_coeffs = []
+    if lr_model is not None and hasattr(lr_model, "coef_"):
+        try:
+            coefs = lr_model.coef_
+            if hasattr(coefs, "mean"):
+                agg = abs(coefs).mean(axis=0)
+                lr_coeffs = sorted([
+                    {"feature": feature_names[i], "weight": float(agg[i])}
+                    for i in range(len(feature_names))
+                ], key=lambda x: x["weight"], reverse=True)
+        except Exception:
+            lr_coeffs = []
+    SHAP_EXPLAINER = None
+    if SHAP_AVAILABLE and rf_model is not None and feature_names:
+        try:
+            bg = df[feature_names].sample(n=min(100, len(df))) if len(df) > 0 else df[feature_names].head(1)
+            SHAP_EXPLAINER = shap.TreeExplainer(rf_model, data=bg)
+        except Exception:
+            SHAP_EXPLAINER = None
+
+
+def persist_model_cache(models_dict, accuracies_dict, feature_names_list, model_metrics_dict=None):
+    try:
+        with open(RF_CACHE, "wb") as f:
+            pickle.dump(models_dict, f)
+        payload = {
+            "feature_names": feature_names_list,
+            "accuracies": accuracies_dict,
+            "model_metrics": model_metrics_dict or {}
+        }
+        with open(META_CACHE, "w", encoding="utf-8") as f:
+            json.dump(payload, f)
+    except Exception:
+        pass
+
+
+def load_cached_model():
+    models_dict = {}
+    accuracies_dict = {}
+    feature_names_list = []
+    model_metrics_dict = {}
+    if os.path.exists(RF_CACHE) and os.path.exists(META_CACHE):
+        try:
+            with open(RF_CACHE, "rb") as f:
+                cached_payload = pickle.load(f)
+            with open(META_CACHE, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            feature_names_list = meta.get("feature_names", [])
+            accuracies_dict = meta.get("accuracies", {})
+            model_metrics_dict = meta.get("model_metrics", {})
+
+            if isinstance(cached_payload, dict):
+                models_dict = cached_payload
+            else:
+                models_dict = {"Random Forest": cached_payload}
+
+            if feature_names_list:
+                for name, model in list(models_dict.items()):
+                    if model is None:
+                        continue
+                    probe = pd.DataFrame(np.zeros((1, len(feature_names_list))), columns=feature_names_list)
+                    model.predict(probe)
+            else:
+                models_dict = {}
+        except Exception as exc:
+            print(f"[app] Cached model is stale or incompatible; retraining. ({exc})")
+            models_dict = {}
+            accuracies_dict = {}
+            feature_names_list = []
+            model_metrics_dict = {}
+    return models_dict, accuracies_dict, feature_names_list, model_metrics_dict
+
 # --- INIT DATA ---
 csv_path = os.path.join(os.getcwd(), "phishing.csv")
 df = None
@@ -173,28 +293,10 @@ models = {}
 accuracies = {}
 feature_names = []
 model_metrics = {}
-if os.path.exists(RF_CACHE) and os.path.exists(META_CACHE):
-    try:
-        with open(RF_CACHE, "rb") as f:
-            rf_model = pickle.load(f)
-        with open(META_CACHE, "r", encoding="utf-8") as f:
-            meta = json.load(f)
-        feature_names = meta.get("feature_names", [])
-        accuracies = meta.get("accuracies", {})
-        models = {"Random Forest": rf_model} if rf_model is not None else {}
-    except Exception:
-        models = {}
-        accuracies = {}
-        feature_names = []
-if not models or not feature_names or not accuracies:
+models, accuracies, feature_names, model_metrics = load_cached_model()
+if not models or not feature_names or not accuracies or not model_metrics:
     models, accuracies, feature_names, model_metrics = train_all_models(df, target_col)
-    try:
-        with open(RF_CACHE, "wb") as f:
-            pickle.dump(models.get("Random Forest"), f)
-        with open(META_CACHE, "w", encoding="utf-8") as f:
-            json.dump({"feature_names": feature_names, "accuracies": accuracies}, f)
-    except Exception:
-        pass
+    persist_model_cache(models, accuracies, feature_names, model_metrics)
 col_map, found_cols = resolve_feature_columns(df)
 best_model = max(accuracies, key=accuracies.get) if accuracies else None
 # Prefer RF for display when close to SVM
@@ -223,12 +325,28 @@ if knn_acc is not None:
     notes.append("KNN can underperform without feature scaling and with many binary indicators; consider scaling and tuning n_neighbors/weights.")
 if svm_acc is not None:
     notes.append("SVM (RBF) is sensitive to feature scales; with binary-heavy features, a linear kernel or scaling often works better.")
+
+def build_model_rationale(model_name: str):
+    if not model_name:
+        return "No model selected."
+    acc = accuracies.get(model_name)
+    acc_text = f"{acc:.2%}" if isinstance(acc, (int, float)) and not np.isnan(acc) else "current accuracy"
+    if model_name == "Random Forest":
+        return f"Random Forest is selected for this run; it delivers strong accuracy ({acc_text}) and strong feature importance."
+    if model_name == "Logistic Regression":
+        return f"Logistic Regression is selected for this run; it is a simple, interpretable model and achieved {acc_text} accuracy on the validation split."
+    if model_name == "SVM":
+        return f"SVM is selected for this run; it can model nonlinear boundaries and achieved {acc_text} accuracy on the validation split."
+    if model_name == "KNN":
+        return f"KNN is selected for this run; it is a distance-based learner and achieved {acc_text} accuracy on the validation split."
+    return f"{model_name} is selected for this run; its measured accuracy is {acc_text}."
+
 if best_model == "Random Forest":
-    model_rationale = "Random Forest chosen for highest accuracy and robustness on mixed/binary features; also provides feature importances for explainability."
+    model_rationale = build_model_rationale(best_model)
 elif best_model == "Logistic Regression":
-    model_rationale = "Logistic Regression chosen for strong performance on binary indicators and simpler decision boundary."
+    model_rationale = build_model_rationale(best_model)
 else:
-    model_rationale = f"{best_model} chosen based on highest accuracy among evaluated models."
+    model_rationale = build_model_rationale(best_model or "Random Forest")
 
 METRICS_JSON = json.dumps({
     "accuracies": accuracies,
@@ -244,38 +362,7 @@ METRICS_JSON = json.dumps({
 }).encode("utf-8")
 
 # --- GLOBAL EXPLANATION (no training changes) ---
-rf_model = models.get("Random Forest")
-lr_model = models.get("Logistic Regression")
-rf_importances = []
-if rf_model is not None and hasattr(rf_model, "feature_importances_"):
-    try:
-        imp = rf_model.feature_importances_
-        rf_importances = sorted([
-            {"feature": feature_names[i], "importance": float(imp[i])}
-            for i in range(len(feature_names))
-        ], key=lambda x: x["importance"], reverse=True)
-    except Exception:
-        rf_importances = []
-lr_coeffs = []
-if lr_model is not None and hasattr(lr_model, "coef_"):
-    try:
-        coefs = lr_model.coef_
-        # Aggregate across classes if multiclass
-        if hasattr(coefs, "mean"):
-            agg = abs(coefs).mean(axis=0)
-            lr_coeffs = sorted([
-                {"feature": feature_names[i], "weight": float(agg[i])}
-                for i in range(len(feature_names))
-            ], key=lambda x: x["weight"], reverse=True)
-    except Exception:
-        lr_coeffs = []
-
-if SHAP_AVAILABLE and rf_model is not None and feature_names:
-    try:
-        bg = df[feature_names].sample(n=min(100, len(df))) if len(df) > 0 else df[feature_names].head(1)
-        SHAP_EXPLAINER = shap.TreeExplainer(rf_model, data=bg)
-    except Exception:
-        SHAP_EXPLAINER = None
+refresh_explanation_state()
 
 # --- SERVER HANDLER ---
 
@@ -320,6 +407,7 @@ class AppHandler(BaseHTTPRequestHandler):
             self.wfile.write(f"Error loading index.html: {str(e)}".encode("utf-8"))
 
     def do_POST(self):
+        global models, accuracies, feature_names, model_metrics, rf_importances, SHAP_EXPLAINER
         if self.path == "/predict":
             length = int(self.headers.get("Content-Length") or 0)
             body = self.rfile.read(length) if length > 0 else b""
@@ -329,23 +417,38 @@ class AppHandler(BaseHTTPRequestHandler):
                 data = {}
             
             url_val = data.get("url") or ""
+            selected_model = resolve_model_for_request(data.get("model"))
             feats = extract_features(url_val)
             full_row = build_full_feature_row(feats, feature_names, col_map)
             
-            # Defaulting to Random Forest
-            model_to_use = models.get("Random Forest")
+            model_to_use = models.get(selected_model) if selected_model else models.get("Random Forest")
             
             if model_to_use is None or full_row.shape[1] == 0:
                 self._send_headers(400, "application/json")
                 self.wfile.write(json.dumps({"error": "Model unavailable or features mismatch"}).encode("utf-8"))
                 return
             
-            pred = int(model_to_use.predict(full_row)[0])
-            label = "Safe" if pred >= 0 else "Phishing" # Assuming 1/-1 or 0/1 based on your dataset
+            heuristic_label = detect_url_phishing(url_val)
+            if heuristic_label == "Phishing":
+                pred = -1
+                label = "Phishing"
+            else:
+                try:
+                    pred = int(model_to_use.predict(full_row)[0])
+                except Exception as exc:
+                    print(f"[app] Prediction failed, rebuilding model: {exc}")
+                    models, accuracies, feature_names, model_metrics = train_all_models(df, target_col)
+                    persist_model_cache(models, accuracies, feature_names, model_metrics)
+                    refresh_explanation_state()
+                    selected_model = resolve_model_for_request(data.get("model"))
+                    model_to_use = models.get(selected_model) if selected_model else models.get("Random Forest")
+                    pred = int(model_to_use.predict(full_row)[0])
+                label = predict_label_from_model_output(pred)
             
             resp = {
                 "label": label,
                 "pred": pred,
+                "used_model": selected_model or "Random Forest",
                 "features": feats.to_dict(orient="records")[0],
                 "model_input_columns": list(full_row.columns),
                 "model_input_row": full_row.iloc[0].astype(float).tolist(),
@@ -362,20 +465,30 @@ class AppHandler(BaseHTTPRequestHandler):
             except Exception:
                 data = {}
             url_val = data.get("url") or ""
+            selected_model = resolve_model_for_request(data.get("model"))
             feats = extract_features(url_val)
             full_row = build_full_feature_row(feats, feature_names, col_map)
-            model_to_use = models.get("Random Forest")
+            model_to_use = models.get(selected_model) if selected_model else models.get("Random Forest")
             if model_to_use is None or full_row.shape[1] == 0:
                 self._send_headers(400, "application/json")
                 self.wfile.write(json.dumps({"error": "Model unavailable or features mismatch"}).encode("utf-8"))
                 return
-            try:
-                pred = int(model_to_use.predict(full_row)[0])
-            except Exception as e:
-                self._send_headers(400, "application/json")
-                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
-                return
-            label = "Safe" if pred >= 0 else "Phishing"
+            heuristic_label = detect_url_phishing(url_val)
+            if heuristic_label == "Phishing":
+                pred = -1
+                label = "Phishing"
+            else:
+                try:
+                    pred = int(model_to_use.predict(full_row)[0])
+                except Exception as exc:
+                    print(f"[app] Explain request failed, rebuilding model: {exc}")
+                    models, accuracies, feature_names, model_metrics = train_all_models(df, target_col)
+                    persist_model_cache(models, accuracies, feature_names, model_metrics)
+                    refresh_explanation_state()
+                    selected_model = resolve_model_for_request(data.get("model"))
+                    model_to_use = models.get(selected_model) if selected_model else models.get("Random Forest")
+                    pred = int(model_to_use.predict(full_row)[0])
+                label = predict_label_from_model_output(pred)
 
             if SHAP_EXPLAINER is not None:
                 try:
@@ -398,6 +511,7 @@ class AppHandler(BaseHTTPRequestHandler):
                     payload = {
                         "label": label,
                         "pred": pred,
+                        "used_model": selected_model or "Random Forest",
                         "explainer": "shap",
                         "contributions": contribs[:10],
                         "rf_importances": rf_importances[:10],
@@ -424,6 +538,7 @@ class AppHandler(BaseHTTPRequestHandler):
             payload = {
                 "label": label,
                 "pred": pred,
+                "used_model": selected_model or "Random Forest",
                 "explainer": "rf",
                 "contributions": contribs[:10],
                 "rf_importances": rf_importances[:10],

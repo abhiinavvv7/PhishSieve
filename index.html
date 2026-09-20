@@ -8,160 +8,193 @@
   <style>
     
     :root {
-      --bg: #f5f5f7;             
-      --card-bg: rgba(255, 255, 255, 0.8);
-      --text-primary: #1d1d1f;   /* SF Black */
-      --text-secondary: #86868b; /* SF Grey */
-      --accent: #0071e3;         /* Apple Blue */
-      --accent-hover: #0077ed;
-      --border: rgba(0, 0, 0, 0.08);
-      --safe: #34c759;           /* Apple Green */
-      --danger: #ff3b30;         /* Apple Red */
-      --radius: 20px;            /* Smooth corners */
-      --nav-bg: rgba(255, 255, 255, 0.7);
-      --shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-      --input-bg: #e8e8ed;
-      --timing: 0.4s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth spring-like transition */
+      --bg: #f3f6fb;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --surface-strong: rgba(255, 255, 255, 0.72);
+      --surface-soft: rgba(255, 255, 255, 0.42);
+      --text-primary: #1f2937;
+      --text-secondary: #5f6f86;
+      --accent: #1a73e8;
+      --accent-hover: #1558b0;
+      --accent-soft: #e8f1ff;
+      --border: rgba(31, 41, 55, 0.08);
+      --safe: #1e8e3e;
+      --danger: #d93025;
+      --radius: 18px;
+      --nav-bg: rgba(255, 255, 255, 0.84);
+      --shadow: 0 8px 24px rgba(26, 115, 232, 0.08), 0 2px 10px rgba(15, 23, 42, 0.04);
+      --input-bg: #f1f3f4;
+      --timing: 0.35s ease;
+      --chip-bg: #eef3ff;
+      color-scheme: light;
     }
 
     [data-theme="dark"] {
-      --bg: #000000;
-      --card-bg: #1c1c1e;
-      --text-primary: #f5f5f7;
-      --text-secondary: #86868b;
-      --accent: #2997ff;         /* Lighter blue for dark mode */
-      --accent-hover: #0071e3;
-      --border: rgba(255, 255, 255, 0.12);
-      --safe: #30d158;
-      --danger: #ff453a;
-      --nav-bg: rgba(28, 28, 30, 0.7);
-      --input-bg: #2c2c2e;
-      --shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+      --bg: #0f172a;
+      --card-bg: rgba(17, 24, 39, 0.9);
+      --surface-strong: rgba(15, 23, 42, 0.82);
+      --surface-soft: rgba(30, 41, 59, 0.8);
+      --text-primary: #e5edf7;
+      --text-secondary: #a8b7ca;
+      --accent: #8ab4ff;
+      --accent-hover: #669cff;
+      --accent-soft: rgba(138, 180, 255, 0.14);
+      --border: rgba(148, 163, 184, 0.12);
+      --safe: #4ade80;
+      --danger: #f87171;
+      --nav-bg: rgba(15, 23, 42, 0.8);
+      --input-bg: #1e293b;
+      --shadow: 0 10px 25px rgba(15, 23, 42, 0.45);
+      --chip-bg: rgba(138, 180, 255, 0.08);
+      color-scheme: dark;
     }
 
-    /* Base Reset */
     html, body {
       height: 100%;
       margin: 0;
-      background-color: var(--bg);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      font-family: "Google Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
       transition: background-color var(--timing), color var(--timing);
     }
 
-    /* Navbar - Frosted Glass */
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+    body {
+      padding: 0;
+    }
+
+    .brand-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 24px;
-      background: var(--nav-bg);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      padding: 18px 24px 14px;
+      background: var(--surface-soft);
       border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 12px;
+      color: var(--text-primary);
     }
-    
+
     .logo {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--accent), #00c6ff);
-      border-radius: 10px; /* App Icon shape */
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #7cf0ad, #4db6ff);
+      border-radius: 10px;
       display: grid;
       place-items: center;
       color: white;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 14px;
-      box-shadow: 0 2px 10px rgba(0,113,227,0.3);
+      box-shadow: 0 10px 18px rgba(77, 182, 255, 0.25);
     }
 
     .title {
-      font-size: 17px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
     }
-    .subtitle { display: none; } /* Hide subtitle for cleaner Apple look */
 
-    /* Buttons & Toggles */
-    .nav-actions { display: flex; gap: 12px; align-items: center; }
-
-    .btn {
-      background: transparent;
-      color: var(--accent);
-      font-size: 14px;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .btn:hover { opacity: 0.7; }
-
-    .toggle {
-      cursor: pointer;
-      padding: 6px;
-      border-radius: 50%;
-      background: var(--input-bg);
+    .nav-actions {
       display: flex;
       align-items: center;
-      justify-content: center;
-      transition: background 0.3s;
+      gap: 12px;
+    }
+
+    .btn {
+      background: var(--surface-strong);
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      padding: 8px 12px;
+    }
+    .btn:hover { background: var(--card-bg); }
+
+    .toggle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface-strong);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
     }
     .toggle svg { width: 18px; height: 18px; stroke: var(--text-primary); }
-    #themeLabel { display: none; } /* Minimalist toggle */
+    #themeLabel { display: none; }
 
-    /* Typography Hero */
     .hero {
       text-align: center;
-      padding: 60px 20px 40px;
-      max-width: 800px;
+      padding: 30px 20px 8px;
+      max-width: 900px;
       margin: 0 auto;
     }
     .hero h1 {
-      font-size: 48px;
+      font-size: clamp(2.8rem, 5vw, 5rem);
       font-weight: 700;
-      letter-spacing: -0.02em; /* Tight Apple tracking */
+      letter-spacing: -0.06em;
       margin: 0;
-      background: linear-gradient(180deg, var(--text-primary) 20%, var(--text-secondary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-primary);
     }
     .hero p {
-      font-size: 21px;
-      line-height: 1.4;
+      font-size: 1.22rem;
+      line-height: 1.6;
       font-weight: 400;
       color: var(--text-secondary);
       margin-top: 12px;
     }
 
-    /* Layout Grid */
     .container {
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 24px;
-      max-width: 1200px;
+      max-width: 930px;
       margin: 0 auto;
-      padding: 0 24px 60px;
+      padding: 8px 18px 42px;
     }
-    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
 
-    /* Cards - The "Bento Box" style */
     .card {
       background: var(--card-bg);
-      border-radius: var(--radius);
-      padding: 24px;
-      box-shadow: var(--shadow);
+      border-radius: 22px;
+      padding: 18px 18px 16px;
       border: 1px solid var(--border);
-      /* Optional: Glass effect on cards too */
-      backdrop-filter: blur(10px); 
+      box-shadow: var(--shadow);
+    }
+
+    .insights {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .info-box {
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      min-height: 110px;
+    }
+
+    .info-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .info-copy {
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.6;
     }
 
     /* Headings inside cards */
@@ -175,41 +208,79 @@
       display: block;
     }
 
-    /* Inputs */
     .input {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       position: relative;
+      padding: 8px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
     }
     input[type="text"] {
       flex: 1;
-      background: var(--input-bg);
+      background: transparent;
       border: none;
       border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 17px; /* Apple standard body size */
+      padding: 16px 18px;
+      font-size: 17px;
       color: var(--text-primary);
       outline: none;
-      transition: box-shadow 0.2s;
+      min-height: 52px;
     }
     input[type="text"]:focus {
-      box-shadow: 0 0 0 2px var(--accent); 
+      box-shadow: none;
     }
 
-    /* Primary Action Button */
     .primary {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), #5b9af8);
       color: white;
       border: none;
-      border-radius: 12px;
-      padding: 0 24px;
+      border-radius: 14px;
+      padding: 0 22px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s, transform 0.2s;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 8px 18px rgba(26, 115, 232, 0.25);
+      min-height: 52px;
     }
-    .primary:hover { background: var(--accent-hover); }
-    .primary:active { transform: scale(0.97); }
+    .primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(26, 115, 232, 0.3);
+    }
+    .primary:active { transform: scale(0.98); }
+
+    .model-select {
+      background: var(--card-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0 14px;
+      min-height: 52px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .simple-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .simple-list li {
+      background: rgba(26,115,232,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
 
     /* Tables */
     table.small { width: 100%; border-collapse: separate; border-spacing: 0; }
@@ -260,16 +331,17 @@
     /* Results Pill */
     #result { margin-top: 16px; min-height: 40px; display: flex; align-items: center; }
     .pill {
-      padding: 6px 16px;
-      border-radius: 99px;
-      font-size: 14px;
-      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 700;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
     }
-    .pill.safe { background: rgba(52, 199, 89, 0.15); color: var(--safe); }
-    .pill.phish { background: rgba(255, 59, 48, 0.15); color: var(--danger); }
+    .pill.safe { background: rgba(30, 142, 62, 0.12); color: var(--safe); }
+    .pill.phish { background: rgba(217, 48, 37, 0.12); color: var(--danger); }
 
     /* Animations */
     .fade-in { opacity: 0; animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -279,119 +351,64 @@
     }
 
     .tiny { font-size: 11px; color: var(--text-secondary); margin-top: 8px; display: block; }
-    code { font-family: "SF Mono", Menlo, monospace; font-size: 11px; background: var(--input-bg); padding: 2px 4px; border-radius: 4px; }
+    code { font-family: "SF Mono", Menlo, monospace; font-size: 11px; background: var(--input-bg); padding: 2px 4px; border-radius: 6px; }
+
+    .card .muted {
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 700;
+    }
+
+    table.small th, table.small td,
+    .perf-table th, .perf-table td {
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    }
 
   </style>
 </head>
 <body>
 
-  <div class="nav fade-in">
+  <div class="brand-row fade-in">
     <div class="brand">
       <div class="logo">PD</div>
-      <div class="title">Phishing Detection Website</div>
+      <div class="title">PhishSieve</div>
     </div>
-
     <div class="nav-actions">
       <div class="toggle" title="Toggle theme" id="themeToggle">
         <svg id="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-        <span id="themeLabel"></span> </div>
+        <span id="themeLabel"></span>
+      </div>
       <button class="btn" id="refreshBtn">Refresh</button>
     </div>
   </div>
 
   <section class="hero fade-in" style="animation-delay: 0.1s;">
     <h1>Intelligent protection.</h1>
-    <p>Real‑time machine learning analysis for URL safety.</p>
+    <p>Real-time phishing detection for safer browsing.</p>
   </section>
 
   <div class="container">
-    
-    <aside class="card fade-in" style="animation-delay: 0.2s;">
-      <span class="muted">Model Performance</span>
-      <div id="perfList" style="margin-top:16px;"></div>
+    <main class="main" style="display:flex; flex-direction:column; gap:18px;">
+      <div class="card live-card fade-in" style="animation-delay: 0.2s;">
+        <span class="muted">Check a URL</span>
+        <div class="input" style="margin-top:8px">
+          <input id="url" type="text" value="http://google.com" placeholder="https://example.com">
+          <button id="predict" class="primary">Predict</button>
+        </div>
+        <div id="result"></div>
 
-      <div style="margin-top:24px; padding-top:24px; border-top:1px solid var(--border);">
-        <span class="muted">Best Algorithm</span>
-        <div id="best" style="font-size:24px; font-weight:700; color:var(--text-primary); letter-spacing:-0.01em; margin-top:4px;">—</div>
-        <div id="mapped" class="tiny" style="margin-top:8px">Feature columns detected: —</div>
-      </div>
-    </aside>
-
-    <main class="main" style="display:flex; flex-direction:column; gap:24px;">
-      
-      <div class="panel-row" style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
-        
-        <div class="card live-card fade-in" style="animation-delay: 0.3s; grid-column: span 2;">
-          <span class="muted">Analyze URL</span>
-          <div class="input" style="margin-top:8px">
-            <input id="url" type="text" value="http://google.com" placeholder="https://example.com">
-            <button id="predict" class="primary">Predict</button>
-            <button id="explainBtn" class="btn" style="margin-left:8px">Explain</button>
+        <div class="insights">
+          <div class="info-box">
+            <span class="info-label">Why this result</span>
+            <div id="whyText" class="info-copy">Enter a URL and check whether it looks safe or risky.</div>
           </div>
-
-          <div id="result"></div>
-
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:20px;">
-            <div>
-              <span class="muted">Extracted Features</span>
-              <table id="featTable" class="small" style="margin-top:8px;"></table>
-            </div>
-            <div>
-              <span class="muted">Raw Model Input</span>
-              <table id="inputTable" class="small" style="margin-top:8px;"></table>
-            </div>
+          <div class="info-box">
+            <span class="info-label">What to do next</span>
+            <div id="nextText" class="info-copy">The app will guide you after the scan.</div>
           </div>
         </div>
-
-        <div class="card fade-in" style="animation-delay: 0.35s; grid-column: span 2;">
-          <span class="muted">Explainable AI</span>
-          <div id="explainPanel" style="display:none; margin-top:12px;">
-            <div id="explainSummary" class="tiny"></div>
-            <table id="explainTable" class="small" style="margin-top:8px;">
-              <thead>
-                <tr><th>Feature</th><th>Value</th><th>Contribution</th></tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="card fade-in" style="animation-delay: 0.35s; grid-column: span 2;">
-          <span class="muted">Explainable AI</span>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:12px;">
-            <div>
-              <span class="muted">Top global features (RF)</span>
-              <table id="globalExplain" class="small" style="margin-top:8px;"><tbody></tbody></table>
-            </div>
-            <div>
-              <span class="muted">This prediction: contributions</span>
-              <table id="localExplain" class="small" style="margin-top:8px;"><tbody></tbody></table>
-            </div>
-          </div>
-        </div>
-
-        <div class="card fade-in" style="animation-delay: 0.4s;">
-          <span class="muted">Metric Breakdown</span>
-          <div id="mlMetrics" style="margin-top:16px;"></div>
-        </div>
-        
-        <div class="card fade-in" style="animation-delay: 0.5s;">
-          <span class="muted">Comparative Scores</span>
-          <table id="perfTable" class="perf-table" style="margin-top:16px;">
-            <thead>
-              <tr><th>Model</th><th style="text-align:right">Metric</th><th style="text-align:right">Score</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div class="card fade-in" style="animation-delay: 0.6s;">
-          <span class="muted">Model Rationale</span>
-          <div id="accMethod" class="tiny" style="margin-top:8px;">—</div>
-          <div id="rationale" style="margin-top:8px; font-size:14px; color:var(--text-secondary)">—</div>
-          <ul id="knnSvmNotes" style="margin-top:12px; padding-left:18px; color:var(--text-secondary); font-size:13px"></ul>
-        </div>
-
       </div>
     </main>
   </div>
@@ -420,24 +437,11 @@
     document.getElementById('refreshBtn').addEventListener('click', loadMetrics);
 
     const $ = s=>document.querySelector(s);
-    const perfTableBody = $('#perfTable tbody');
-    const perfList = $('#perfList');
-    const bestDiv = $('#best');
-    const mappedDiv = $('#mapped');
     const urlInput = $('#url');
     const predictBtn = $('#predict');
     const resultDiv = $('#result');
-    const featTableBody = $('#featTable');
-    const inputTableBody = $('#inputTable');
-    const mlMetricsDiv = $('#mlMetrics');
-    const accMethodDiv = $('#accMethod');
-    const rationaleDiv = $('#rationale');
-    const knnSvmNotesUl = $('#knnSvmNotes');
-    const explainPanel = $('#explainPanel');
-    const explainSummary = $('#explainSummary');
-    const explainTableBody = $('#explainTable tbody');
-    const globalExplainBody = $('#globalExplain tbody');
-    const localExplainBody = $('#localExplain tbody');
+    const whyText = $('#whyText');
+    const nextText = $('#nextText');
 
     function pct(x){
       if(isNaN(x)) return '-';
@@ -467,99 +471,35 @@
       return wrapper;
     }
 
+    function getModelRationale() {
+      return 'Random Forest is the active model for this app. It is the default choice and is used for every prediction.';
+    }
+
     async function loadMetrics(){
       try {
         const r = await fetch('/metrics');
         const data = await r.json();
-
-        const accs = data.accuracies || {};
-        const best = data.best_model_display || data.best_model || (Object.keys(accs).length ? Object.keys(accs)[0] : null);
-        const found = data.found_feature_columns || [];
-
-        // Clear UI
-        perfList.innerHTML = '';
-        perfTableBody.innerHTML = '';
-        mlMetricsDiv.innerHTML = '';
-
-        const rich = data.metrics || data.classification_report || null;
-
-        // Sidebar List
-        Object.keys(accs).forEach(k => {
-          const v = accs[k];
-          perfList.appendChild(createBar({
-            label: k, 
-            valueText: pct(v), 
-            valuePct: v*100 
-          }));
-
-          // Table Row
-          const tr = document.createElement('tr');
-          const td1 = document.createElement('td'); td1.textContent = k;
-          const td2 = document.createElement('td'); td2.textContent = 'Accuracy'; td2.style.textAlign='right';
-          const td3 = document.createElement('td'); td3.textContent = pct(v); td3.style.textAlign='right';
-          tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
-          perfTableBody.appendChild(tr);
-        });
-
-        // Metrics Panel
-        if(rich && typeof rich === 'object') {
-          const models = Object.keys(accs);
-          models.forEach(name=>{
-            const m = rich[name] || {};
-            const report = m.classification_report || {};
-            const weighted = report['weighted avg'] || {};
-            const f1 = weighted['f1-score'];
-            if(typeof f1 === 'number') {
-              mlMetricsDiv.appendChild(createBar({label: name + ' F1', valuePct: Math.round(f1*100), valueText: pct(f1)}));
-            }
-            const roc = m.roc_auc;
-            if(typeof roc === 'number') {
-              mlMetricsDiv.appendChild(createBar({label: name + ' ROC-AUC', valuePct: Math.round(roc*100), valueText: pct(roc)}));
-            }
-          });
-        } else {
-          // Fallback to showing top accuracy again in metrics panel if no rich data
-          const entries = Object.entries(accs).sort((a,b)=> b[1]-a[1]).slice(0,3);
-          entries.forEach(([name, val])=>{
-            mlMetricsDiv.appendChild(createBar({label: name, valuePct: Math.round(val*100), valueText: pct(val)}));
-          });
+        if (data && data.accuracies) {
+          // leave metrics endpoint loaded silently; UI intentionally does not display model-selection details
         }
-
-        bestDiv.textContent = best || '—';
-        mappedDiv.textContent = (found && found.length) ? 'Mapped: ' + found.join(', ') : 'Mapped: None';
-
-        accMethodDiv.textContent = data.accuracy_method || '—';
-        rationaleDiv.textContent = data.model_rationale || '—';
-        knnSvmNotesUl.innerHTML = '';
-        (data.knn_svm_notes || []).forEach(n=>{ const li=document.createElement('li'); li.textContent=n; knnSvmNotesUl.appendChild(li); });
       } catch(e) {
         console.error('metrics error', e);
-        perfList.innerHTML = '<div class="tiny">Connection failed</div>';
       }
     }
 
-    async function loadGlobalExplain(){
-      try {
-        const r = await fetch('/explain');
-        const data = await r.json();
-        const rf = (data.rf_importances || []).slice(0,10);
-        globalExplainBody.innerHTML = '';
-        rf.forEach(item=>{
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${item.feature}</td><td>${(item.importance*100).toFixed(2)}%</td>`;
-          globalExplainBody.appendChild(tr);
-        });
-      } catch(e) {
-        globalExplainBody.innerHTML = '<tr><td class="tiny">Unable to load explainability</td></tr>';
+    function setInsightState(label) {
+      if (label === 'Safe') {
+        whyText.textContent = 'This link looks normal and matches common safe website patterns.';
+        nextText.textContent = 'You can continue, but still check the website address before entering personal details.';
+        return;
       }
+
+      whyText.textContent = 'This link shows signs commonly linked to phishing, such as suspicious structure or weak trust signals.';
+      nextText.textContent = 'Do not click this link unless you verified it separately from a trusted source.';
     }
 
-    function appendRows(tbody, rows){ rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td>`; tbody.appendChild(tr); }); }
     async function predict(){
       resultDiv.innerHTML = '';
-      featTableBody.innerHTML = '';
-      inputTableBody.innerHTML = '';
-      localExplainBody.innerHTML = '';
       
       const btn = document.getElementById('predict');
       btn.textContent = 'Analyzing...';
@@ -568,7 +508,7 @@
         const r = await fetch('/predict', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({ url: urlInput.value })
+          body: JSON.stringify({ url: urlInput.value, model: 'Random Forest' })
         });
         const data = await r.json();
         
@@ -576,76 +516,31 @@
 
         if(data.error){
           resultDiv.innerHTML = '<div class="tiny" style="color:var(--danger)">'+data.error+'</div>';
+          whyText.textContent = 'The check could not run. Please try another URL.';
+          nextText.textContent = 'Try a different web address and run the check again.';
           return;
         }
+
         const pill = document.createElement('span');
-        // Apple style pill logic
         pill.className = 'pill ' + (data.label === 'Safe' ? 'safe' : 'phish');
         pill.innerHTML = (data.label === 'Safe') 
           ? '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg> Safe' 
           : '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg> Phishing Detected';
         
         resultDiv.appendChild(pill);
-
-        // features
-        const feats = data.features || {};
-        appendRows(featTableBody, Object.keys(feats).map(k=>[k, feats[k]]));
-
-        const cols = data.model_input_columns || [];
-        const vals = data.model_input_row || [];
-        appendRows(inputTableBody, cols.map((c,i)=>[c, vals[i] ?? '']));
-
-        try {
-          const er = await fetch('/explain', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: urlInput.value })
-          });
-          const ed = await er.json();
-          const contribs = ed.contributions || [];
-          localExplainBody.innerHTML = '';
-          contribs.forEach(c=>{
-            const tr = document.createElement('tr');
-            const name = c.column ?? c.feature ?? '';
-            const val = (typeof c.value !== 'undefined') ? c.value : '';
-            const contrib = ('shap_value' in c)
-              ? Number(c.shap_value).toFixed(6)
-              : (('weighted' in c) ? Number(c.weighted).toFixed(6) : ((typeof c.importance === 'number') ? (c.importance*100).toFixed(2)+'%' : ''));
-            tr.innerHTML = `<td>${name}</td><td>${val}</td><td>${contrib}</td>`;
-            localExplainBody.appendChild(tr);
-          });
-        } catch(e) {
-          localExplainBody.innerHTML = '<tr><td class="tiny">Explain request failed</td></tr>';
-        }
+        setInsightState(data.label);
       } catch(e){
         console.error(e);
         btn.textContent = 'Predict';
         resultDiv.innerHTML = '<div class="tiny">Request failed</div>';
+        whyText.textContent = 'The check failed to complete. Please try again.';
+        nextText.textContent = 'Refresh the page or try a different URL.';
       }
     }
 
     loadMetrics();
-    loadGlobalExplain();
     document.getElementById('predict').addEventListener('click', predict);
     urlInput.addEventListener('keydown', (e)=> { if(e.key === 'Enter') predict(); });
-    document.getElementById('explainBtn').addEventListener('click', async ()=>{
-      try{
-        const res = await fetch('/explain', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ url: urlInput.value }) });
-        const data = await res.json();
-        if(data.error){ alert(data.error); return; }
-        explainPanel.style.display = 'block';
-        explainSummary.textContent = `Label: ${data.label} — explainer: ${data.explainer}`;
-        const rows = (data.contributions || []).slice(0,10).map(c=>{
-          const v = Number(c.value).toFixed(4);
-          const contrib = ('shap_value' in c) ? Number(c.shap_value).toFixed(6) : Number(c.weighted||0).toFixed(6);
-          return [c.column, v, contrib];
-        });
-        explainTableBody.innerHTML = '';
-        rows.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>`; explainTableBody.appendChild(tr); });
-      } catch(e){
-        alert('Explain request failed');
-      }
-    });
   </script>
 </body>
 </html>
